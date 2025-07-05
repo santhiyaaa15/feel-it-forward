@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feel It Forward</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEBAQAAAAAA...">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f9f9f9; color: #333; margin: 0; }
+        .header {
+            background-color: #e6c3d3;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; }
+        .header button { padding: 5px 10px; margin-left: 10px; border: none; border-radius: 5px; background-color: #e6c3d3; color: #fff; cursor: pointer; }
+        .header button:hover { background-color: #d4a9b9; }
+        .home-section, .mood-section, .history-section, .community-section, .login-section {
+            max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        .mood-section .success-message, .comment-section .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .mood-buttons button {
+            padding: 10px 20px; margin: 5px; border: none; border-radius: 20px; background-color: #e6c3d3;
+            cursor: pointer; outline: none;
+        }
+        .mood-buttons button.selected { background-color: #d4a9b9; }
+        .mood-buttons button:hover { background-color: #d4a9b9; }
+        #contextInput { width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+        .history-list, .community-list { text-align: left; padding-left: 20px; }
+        .community-item { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 10px; }
+        .action-btn { padding: 5px 10px; margin: 0 5px; border: none; border-radius: 5px; background-color: #ff9900; color: #fff; cursor: pointer; }
+        .action-btn:hover { background-color: #e68a00; }
+        .follow-btn, .unfollow-btn, .pending-follow-btn {
+            padding: 5px 10px; margin: 0 5px; border: none; border-radius: 5px; background-color: #007bff; color: #fff; cursor: pointer;
+        }
+        .follow-btn:hover, .unfollow-btn:hover, .pending-follow-btn:hover { background-color: #0056b3; }
+        .pending-follow-btn { background-color: #6c757d; }
+        .comment-section { margin-top: 10px; }
+        .comment-input { width: 70%; padding: 5px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+        .comment-btn { padding: 5px 10px; border: none; border-radius: 5px; background-color: #28a745; color: #fff; cursor: pointer; }
+        .comment-btn:hover { background-color: #218838; }
+        .comment-btn:disabled { background-color: #a0a0a0; cursor: not-allowed; }
+        .comment { margin: 5px 0; padding: 5px; background: #e9ecef; border-radius: 5px; }
+        #debug, #loginDebug, #registerDebug, #forgotDebug { color: red; margin-top: 10px; }
+        .hidden { display: none; }
+        .nav-btn { padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; background-color: #e6c3d3; color: #fff; cursor: pointer; }
+        .nav-btn:hover { background-color: #d4a9b9; }
+        .see-more { color: #007bff; text-decoration: underline; cursor: pointer; }
+        .see-more:hover { color: #0056b3; }
+        .community-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .community-header h3 { margin: 0; }
+        .community-header button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e6c3d3;
+            color: #fff;
+            cursor: pointer;
+        }
+        .community-header button:hover { background-color: #d4a9b9; }
+        .filter-search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .emotion-filter select, .search-bar {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .search-bar { width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span style="color: #e6c3d3;">❤️</span> Feel It Forward</h1>
+        <div>
+            <button onclick="window.location.href='followrequests.html'">Follow Requests</button>
+            <button onclick="window.location.href='profile.html'">Profile</button>
+            <button onclick="signOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="home-section" id="homeSection">
+        <h2>Welcome to Feel It Forward</h2>
+        <p>Feel It Forward is a platform where you can share your feelings anonymously and connect with others through ripples of kindness, support, and understanding. Whether you're feeling happy, sad, or anything in between, your emotions can inspire others in the community.</p>
+        <button class="nav-btn" onclick="showRegister()">Sign Up</button>
+        <button class="nav-btn" onclick="showLogin()">Sign In</button>
+    </div>
+
+    <div class="login-section hidden" id="loginSection">
+        <h2>Sign In</h2>
+        <p>Please sign in to share and connect.</p>
+        <input type="text" id="usernameInput" placeholder="Username"><br>
+        <input type="password" id="passwordInput" placeholder="Password"><br>
+        <button onclick="login()">Sign In</button>
+        <p><a href="#" onclick="showForgotPassword()">Forgot Password?</a></p>
+        <div id="loginDebug"></div>
+    </div>
+
+    <div class="login-section hidden" id="registerSection">
+        <h2>Sign Up</h2>
+        <p>Create a new account to start sharing.</p>
+        <input type="text" id="regUsernameInput" placeholder="Username"><br>
+        <input type="email" id="regEmailInput" placeholder="Email"><br>
+        <input type="password" id="regPasswordInput" placeholder="Password"><br>
+        <button onclick="register()">Sign Up</button>
+        <button onclick="showLogin()">Back to Sign In</button>
+        <div id="registerDebug"></div>
+    </div>
+
+    <div class="login-section hidden" id="forgotPasswordSection">
+        <h2>Forgot Password</h2>
+        <p>Enter your email to receive a password reset link.</p>
+        <input type="email" id="forgotEmailInput" placeholder="Email"><br>
+        <button onclick="forgotPassword()">Send Reset Link</button>
+        <button onclick="showLogin()">Back to Sign In</button>
+        <div id="forgotDebug"></div>
+    </div>
+
+    <div id="appContent" class="hidden">
+        <div class="mood-section">
+            <h2>Feel It Forward</h2>
+            <p>Share your feelings anonymously and create ripples of kindness, support, and understanding.</p>
+            <h3>How are you feeling today?</h3>
+            <div class="mood-buttons" id="moodButtons">
+                <button onclick="selectMood('Happy')" class="mood-btn">Happy</button>
+                <button onclick="selectMood('Sad')" class="mood-btn">Sad</button>
+                <button onclick="selectMood('Anxious')" class="mood-btn">Anxious</button>
+                <button onclick="selectMood('Excited')" class="mood-btn">Excited</button>
+                <button onclick="selectMood('Proud')" class="mood-btn">Proud</button>
+                <button onclick="selectMood('Nervous')" class="mood-btn">Nervous</button>
+                <button onclick="selectMood('Frustrated')" class="mood-btn">Frustrated</button>
+                <button onclick="selectMood('Grateful')" class="mood-btn">Grateful</button>
+                <button onclick="selectMood('Confused')" class="mood-btn">Confused</button>
+                <button onclick="selectMood('Hopeful')" class="mood-btn">Hopeful</button>
+                <button onclick="selectMood('Overwhelmed')" class="mood-btn">Overwhelmed</button>
+                <button onclick="selectMood('Calm')" class="mood-btn">Calm</button>
+                <button onclick="selectMood('Angry')" class="mood-btn">Angry</button>
+            </div>
+            <textarea id="contextInput" placeholder="Give some context to your feeling... (optional)"></textarea>
+            <button onclick="submitMood(event)">Submit Mood</button>
+            <div class="success-message" id="successMessage"></div>
+        </div>
+
+        <div class="history-section">
+            <h3>Your Mood History</h3>
+            <div id="moodHistory"></div>
+            <div id="debug"></div>
+        </div>
+
+        <div class="community-section">
+            <div class="community-header">
+                <button onclick="fetchAllMoods()">Refresh</button>
+                <h3>Community Ripples</h3>
+                <div class="filter-search-container">
+                    <div class="emotion-filter">
+                        <label for="emotionFilter">Filter by Emotion: </label>
+                        <select id="emotionFilter" onchange="fetchAllMoods()">
+                            <option value="All">All</option>
+                            <option value="Happy">Happy</option>
+                            <option value="Sad">Sad</option>
+                            <option value="Anxious">Anxious</option>
+                            <option value="Excited">Excited</option>
+                            <option value="Proud">Proud</option>
+                            <option value="Nervous">Nervous</option>
+                            <option value="Frustrated">Frustrated</option>
+                            <option value="Grateful">Grateful</option>
+                            <option value="Confused">Confused</option>
+                            <option value="Hopeful">Hopeful</option>
+                            <option value="Overwhelmed">Overwhelmed</option>
+                            <option value="Calm">Calm</option>
+                            <option value="Angry">Angry</option>
+                        </select>
+                    </div>
+                    <input type="text" class="search-bar" id="searchBar" placeholder="Search" oninput="fetchAllMoods()">
+                </div>
+            </div>
+            <div id="communityRipples"></div>
+        </div>
+    </div>
+
+    <script>
+        let userId = null;
+        let selectedMood = null;
+        let lastDisplayedMoodIds = []; // To track the last displayed moods and avoid repetition
+
+        function showHome() {
+            console.log("Navigating to homepage");
+            document.getElementById('homeSection').classList.remove('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('forgotPasswordSection').classList.add('hidden');
+            document.getElementById('appContent').classList.add('hidden');
+        }
+
+        function showAppContent() {
+            console.log("Navigating to appContent");
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('forgotPasswordSection').classList.add('hidden');
+            document.getElementById('appContent').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('forgotPasswordSection').classList.add('hidden');
+            document.getElementById('appContent').classList.add('hidden');
+        }
+
+        function showRegister() {
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.remove('hidden');
+            document.getElementById('forgotPasswordSection').classList.add('hidden');
+            document.getElementById('appContent').classList.add('hidden');
+        }
+
+        function showForgotPassword() {
+            document.getElementById('homeSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('registerSection').classList.add('hidden');
+            document.getElementById('forgotPasswordSection').classList.remove('hidden');
+            document.getElementById('appContent').classList.add('hidden');
+        }
+
+        async function register() {
+            const username = document.getElementById('regUsernameInput').value;
+            const email = document.getElementById('regEmailInput').value;
+            const password = document.getElementById('regPasswordInput').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Registration failed');
+                userId = result.user_id;
+                localStorage.setItem('userId', userId);
+                localStorage.setItem('username', username);
+                alert("Registration successful! Please sign in.");
+                showLogin();
+            } catch (error) {
+                document.getElementById('registerDebug').textContent = "Error: " + error.message;
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('usernameInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                userId = result.user_id;
+                localStorage.setItem('userId', userId);
+                localStorage.setItem('username', username);
+                showAppContent();
+                showHistory();
+                fetchAllMoods();
+            } catch (error) {
+                document.getElementById('loginDebug').textContent = "Error: " + error.message;
+            }
+        }
+
+        async function forgotPassword() {
+            const email = document.getElementById('forgotEmailInput').value;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/forgot_password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                alert("A password reset link has been sent to your email (simulated). Check the backend terminal for details.");
+                showLogin();
+            } catch (error) {
+                document.getElementById('forgotDebug').textContent = "Error: " + error.message;
+            }
+        }
+
+        function selectMood(mood) {
+            selectedMood = mood;
+            const moodButtons = document.querySelectorAll('.mood-btn');
+            moodButtons.forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.textContent === mood) btn.classList.add('selected');
+            });
+        }
+
+        async function submitMood(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log("Submitting mood...");
+            if (!selectedMood) {
+                showSuccessMessage("Please select a mood by clicking one!");
+                console.log("No mood selected, staying on page");
+                return;
+            }
+            let context = document.getElementById("contextInput").value;
+            let date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            try {
+                let response = await fetch('http://localhost:5000/api/mood', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, emotion: selectedMood, context: context, date: date })
+                });
+                console.log("Mood submission response status:", response.status);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let result = await response.json();
+                console.log("Mood submitted successfully:", result);
+                document.getElementById("contextInput").value = "";
+                document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('selected'));
+                selectedMood = null;
+                await showHistory();
+                await fetchAllMoods();
+                showSuccessMessage("Yay! Your mood is saved! ID: " + result.id);
+                console.log("Mood submission complete, ensuring no navigation");
+            } catch (error) {
+                document.getElementById("debug").textContent = "Error submitting mood: " + error.message;
+                console.error("Error during mood submission:", error);
+            }
+        }
+
+        function showSuccessMessage(message) {
+            const successMsg = document.getElementById("successMessage");
+            successMsg.textContent = message;
+            successMsg.style.display = "block";
+            setTimeout(() => {
+                successMsg.style.display = "none";
+            }, 3000);
+        }
+
+        async function showHistory() {
+            try {
+                let response = await fetch(`http://localhost:5000/api/mood/history/${userId}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let moods = await response.json();
+                let historyDiv = document.getElementById("moodHistory");
+                if (!moods || moods.length === 0) {
+                    historyDiv.innerHTML = "<p>No history yet! Submit a mood to see it here.</p>";
+                    return;
+                }
+                const displayedMoods = moods.slice(0, 4);
+                historyDiv.innerHTML = displayedMoods.map(mood => `
+                    <p>${mood.date}: ${mood.emotion} - ${mood.context} (Supports: ${mood.supports}, Ripples: ${mood.ripples})</p>
+                `).join('');
+                if (moods.length > 4) {
+                    historyDiv.innerHTML += `<p class="see-more" onclick="window.location.href='moodhistory.html'">See More</p>`;
+                }
+                document.getElementById("debug").textContent = "";
+            } catch (error) {
+                document.getElementById("debug").textContent = "Error fetching history: " + error.message;
+            }
+        }
+
+        async function fetchAllMoods() {
+            try {
+                let response = await fetch('http://localhost:5000/api/moods');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let moods = await response.json();
+                let ripplesDiv = document.getElementById("communityRipples");
+                ripplesDiv.innerHTML = '';
+                if (!moods || moods.length === 0) {
+                    ripplesDiv.innerHTML = "<p>No community moods yet. Be the first to share!</p>";
+                    return;
+                }
+
+                // Filter moods based on selected emotion
+                const selectedEmotion = document.getElementById('emotionFilter').value;
+                let filteredMoods = moods;
+                if (selectedEmotion !== 'All') {
+                    filteredMoods = moods.filter(mood => mood.emotion === selectedEmotion);
+                }
+
+                // Filter moods based on search input
+                const searchQuery = document.getElementById('searchBar').value.toLowerCase();
+                if (searchQuery) {
+                    filteredMoods = filteredMoods.filter(mood => 
+                        mood.context.toLowerCase().includes(searchQuery) || 
+                        mood.emotion.toLowerCase().includes(searchQuery)
+                    );
+                }
+
+                if (filteredMoods.length === 0) {
+                    ripplesDiv.innerHTML = `<p>No community moods found for ${selectedEmotion}${searchQuery ? ' with search term "' + searchQuery + '"' : ''}. Try another emotion or search term!</p>`;
+                    return;
+                }
+
+                // Filter out the moods that were last displayed to prioritize new ones
+                let availableMoods = filteredMoods.filter(mood => !lastDisplayedMoodIds.includes(mood.id));
+                if (availableMoods.length < 3) {
+                    availableMoods = filteredMoods;
+                    lastDisplayedMoodIds = [];
+                }
+
+                // Shuffle the available moods to randomize selection
+                for (let i = availableMoods.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [availableMoods[i], availableMoods[j]] = [availableMoods[j], availableMoods[i]];
+                }
+
+                // Take up to 3 moods to display
+                const displayedMoods = availableMoods.slice(0, 3);
+                lastDisplayedMoodIds = displayedMoods.map(mood => mood.id);
+
+                for (let mood of displayedMoods) {
+                    if (!userId) {
+                        ripplesDiv.innerHTML = "<p>Please sign in to see community moods.</p>";
+                        return;
+                    }
+                    const followStatus = userId !== mood.user_id ? await checkFollowStatus(userId, mood.user_id) : 'self';
+                    ripplesDiv.innerHTML += `
+                        <div class="community-item">
+                            <p>${mood.emotion}: ${mood.context} (by @${mood.user_id.slice(0, 5)}...)</p>
+                            <button class="action-btn" onclick="updateMood('${mood.id}', 'supports')">Support (${mood.supports})</button>
+                            <button class="action-btn" onclick="updateMood('${mood.id}', 'ripples')">Ripple (${mood.ripples})</button>
+                            ${userId !== mood.user_id ? (followStatus === 'accepted' ?
+                                `<button class="unfollow-btn" onclick="unfollowUser('${mood.user_id}')">Unfollow</button>` :
+                                (followStatus === 'pending' ?
+                                    `<button class="pending-follow-btn" disabled>Pending</button>` :
+                                    `<button class="follow-btn" onclick="followUser('${mood.user_id}')">Follow</button>`
+                                )
+                            ) : ''}
+                            <div class="comment-section">
+                                ${mood.comments.map(comment => `
+                                    <div class="comment">
+                                        <p>@${comment.user_id.slice(0, 5)}... (${comment.timestamp}): ${comment.content}</p>
+                                    </div>
+                                `).join('')}
+                                ${userId !== mood.user_id && followStatus === 'accepted' ? `
+                                    <input type="text" class="comment-input" id="commentInput_${mood.id}" placeholder="Add a comment...">
+                                    <button class="comment-btn" onclick="addComment('${mood.id}', event)">Comment</button>
+                                    <div class="success-message" id="successMessage_${mood.id}"></div>
+                                ` : userId !== mood.user_id ? `<p>Follow and wait for acceptance to comment</p>` : `
+                                    <input type="text" class="comment-input" id="commentInput_${mood.id}" placeholder="Add a comment...">
+                                    <button class="comment-btn" onclick="addComment('${mood.id}', event)">Comment</button>
+                                    <div class="success-message" id="successMessage_${mood.id}"></div>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById("communityRipples").innerHTML = "<p>Error loading community moods: " + error.message + "</p>";
+            }
+        }
+
+        async function followUser(followedId) {
+            try {
+                const response = await fetch('http://localhost:5000/api/follow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ follower_id: userId, followed_id: followedId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                fetchAllMoods();
+            } catch (error) {
+                console.error("Error following user:", error);
+            }
+        }
+
+        async function unfollowUser(followedId) {
+            try {
+                const response = await fetch('http://localhost:5000/api/unfollow', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ follower_id: userId, followed_id: followedId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                fetchAllMoods();
+            } catch (error) {
+                console.error("Error unfollowing user:", error);
+            }
+        }
+
+        async function checkFollowStatus(followerId, followedId) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/follow_status/${followerId}/${followedId}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                return result.status || 'not_following';
+            } catch (error) {
+                console.error("Error checking follow status:", error);
+                return 'not_following';
+            }
+        }
+
+        async function addComment(moodId, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log("Adding comment for mood ID:", moodId);
+            const content = document.getElementById(`commentInput_${moodId}`).value;
+            if (!content) {
+                showCommentSuccessMessage(moodId, "Please enter a comment!");
+                console.log("No comment content, staying on page");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mood_id: moodId, user_id: userId, content: content })
+                });
+                console.log("Comment submission response status:", response.status);
+                if (!response.ok) throw new Error(await response.text());
+                const result = await response.json();
+                console.log("Comment added successfully:", result);
+                document.getElementById(`commentInput_${moodId}`).value = '';
+                await fetchAllMoods();
+                showCommentSuccessMessage(moodId, "Comment added successfully! ID: " + result.id);
+                console.log("Comment submission complete, ensuring no navigation");
+            } catch (error) {
+                console.error("Error adding comment:", error);
+                showCommentSuccessMessage(moodId, "Error: " + error.message);
+            }
+        }
+
+        function showCommentSuccessMessage(moodId, message) {
+            const successMsg = document.getElementById(`successMessage_${moodId}`);
+            successMsg.textContent = message;
+            successMsg.style.display = "block";
+            setTimeout(() => {
+                successMsg.style.display = "none";
+            }, 3000);
+        }
+
+        async function updateMood(moodId, action) {
+            let payload = {};
+            if (action === 'supports') payload.supports = 1;
+            if (action === 'ripples') payload.ripples = 1;
+
+            try {
+                await fetch(`http://localhost:5000/api/mood/${moodId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                await fetchAllMoods();
+                await showHistory();
+            } catch (error) {
+                console.error("Error updating mood:", error);
+            }
+        }
+
+        function signOut() {
+            console.log("Signing out, navigating to homepage");
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userBio');
+            userId = null;
+            showHome();
+        }
+
+        window.onload = () => {
+            console.log("Window loaded, checking userId...");
+            userId = localStorage.getItem('userId');
+            if (userId) {
+                console.log("User is logged in, restoring appContent");
+                showAppContent();
+                showHistory();
+                fetchAllMoods();
+            } else {
+                console.log("No user logged in, showing homepage");
+                localStorage.removeItem('userId');
+                userId = null;
+                showHome();
+            }
+        };
+    </script>
+</body>
+</html>

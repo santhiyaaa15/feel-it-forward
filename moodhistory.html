@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood History - Feel It Forward</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEBAQAAAAAA...">
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f9f9f9; color: #333; margin: 0; }
+        .header {
+            background-color: #e6c3d3;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; color: #fff; font-size: 24px; }
+        .header button { padding: 5px 10px; margin-left: 10px; border: none; border-radius: 5px; background-color: #e6c3d3; color: #fff; cursor: pointer; }
+        .header button:hover { background-color: #d4a9b9; }
+        .history-section {
+            max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        .history-list { text-align: left; padding-left: 20px; }
+        #debug { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span style="color: #e6c3d3;">❤️</span> Feel It Forward</h1>
+        <div>
+            <button onclick="window.location.href='index.html'">Home</button>
+            <button onclick="signOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h2>Full Mood History</h2>
+        <div id="moodHistory" class="history-list"></div>
+        <div id="debug"></div>
+    </div>
+
+    <script>
+        let userId = null;
+
+        async function showHistory() {
+            try {
+                let response = await fetch(`http://localhost:5000/api/mood/history/${userId}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let moods = await response.json();
+                let historyDiv = document.getElementById("moodHistory");
+                historyDiv.innerHTML = moods.length ? moods.map(mood => `
+                    <p>${mood.date}: ${mood.emotion} - ${mood.context} (Supports: ${mood.supports}, Ripples: ${mood.ripples})</p>
+                `).join('') : "<p>No history yet! Submit a mood to see it here.</p>";
+                document.getElementById("debug").textContent = "";
+            } catch (error) {
+                document.getElementById("debug").textContent = "Error fetching history: " + error.message;
+            }
+        }
+
+        function signOut() {
+            console.log("Signing out, navigating to homepage");
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userBio');
+            userId = null;
+            window.location.href = 'index.html';
+        }
+
+        window.onload = () => {
+            console.log("Mood history page loaded, checking userId...");
+            userId = localStorage.getItem('userId');
+            if (userId) {
+                console.log("User is logged in, loading mood history");
+                showHistory();
+            } else {
+                console.log("No user logged in, redirecting to homepage");
+                localStorage.removeItem('userId');
+                userId = null;
+                window.location.href = 'index.html';
+            }
+        };
+    </script>
+</body>
+</html>
